@@ -248,64 +248,106 @@ def main():
 
    # Run the CG solver.
 
-   if True:
+   ###################################################################################################
+   def ConjGrad(a, b, x):
+       #b = (b[np.newaxis]).T;
+       #x = (x[np.newaxis]).T;
+       
+       r = (b - np.dot(np.array(a), x));
+       p = r;
+       rsold = np.dot(r.T, r);
+    
+       for i in range(b.shape[0]):
+           a_p = np.dot(a, p);
+           alpha = rsold / np.dot(p.T, a_p);
+           x = x + (alpha * p);
+           r = r - (alpha * a_p);
+           rsnew = np.dot(r.T, r);
+           if (np.sqrt(rsnew) < (10 ** -5)):
+               break;
+           p = r + ((rsnew / rsold) * p);
+           rsold = rsnew;        
+       return p
 
-      # The built-in CG solver allows a user-defined 'callback' function that's
-      # called each iteration so the user can inspect how the solution is
-      # progressing. I'll just compute and print the 2-norm of the residual every
-      # 10th step. iteration_count, b, and A_csr are known externally.
-      def cg_callback(xk):
-         global iteration_count
-         iteration_count += 1
-         if iteration_count % 10 == 0:
-            print("iter: %d %e"%(iteration_count, np.linalg.norm(b - A_csr * xk)))
+# =============================================================================
+#     a = np.array([[3, 2, -1], [2, -1, 1], [-1, 1, -1]]) # 3X3 symmetric matrix
+#     b = (np.array([1, -2, 0])[np.newaxis]).T  # 3X1 matrix
+#     x = (np.array([0, 1, 2])[np.newaxis]).T
+# =============================================================================
+   nrows = b.shape[0]
+   # Create the solution vector and initialize the zero.
+   x = np.zeros(nrows,dtype='d') 
+   #x = csr_matrix(x); 
+   x = x[np.newaxis].T
+   #b = csr_matrix(b);
+   b = b[np.newaxis].T
+   A_array = A_csr.toarray()
+   val = ConjGrad(A_array, b, x);
+   print(val)
+   l = []
 
-      print("Starting CG solver:")
+# =============================================================================
+#    if True:
+# 
+#       # The built-in CG solver allows a user-defined 'callback' function that's
+#       # called each iteration so the user can inspect how the solution is
+#       # progressing. I'll just compute and print the 2-norm of the residual every
+#       # 10th step. iteration_count, b, and A_csr are known externally.
+#       def cg_callback(xk):
+#          global iteration_count
+#          iteration_count += 1
+#          if iteration_count % 10 == 0:
+#             print("iter: %d %e"%(iteration_count, np.linalg.norm(b - A_csr * xk)))
+# 
+#       print("Starting CG solver:")
+# 
+#       time_start = time.time()
+#       x, info = linalg.cg( A_csr, b, tol=tolerance, maxiter=500, callback=cg_callback )
+# 
+#       time_stop = time.time()
+#       if info == 0:
+#          print("CG solver converged in %d iterations and took %8.4f (seconds)"%(iteration_count, time_stop-time_start))
+#          if write_solution:
+#             write_tofile(x, 'cg.dat')
+#       else:
+#          print('CG solver failed to converge. Error flag= ' + str(info))
+# =============================================================================
 
-      time_start = time.time()
-      x, info = linalg.cg( A_csr, b, tol=tolerance, maxiter=500, callback=cg_callback )
-
-      time_stop = time.time()
-      if info == 0:
-         print("CG solver converged in %d iterations and took %8.4f (seconds)"%(iteration_count, time_stop-time_start))
-         if write_solution:
-            write_tofile(x, 'cg.dat')
-      else:
-         print('CG solver failed to converge. Error flag= ' + str(info))
-
-   # Run the Jacobi Solver
-   if True:
-
-      print("Starting Jacobi solver:")
-
-      time_start = time.time()
-
-      # The Jacobi iteration is much simplier than CG. In matrix form,
-      # it's ...
-      #    x^(k+1) = D^-1 [ b - (L + U)x ]
-      #
-      # This comes from additively splitting A into (L + D + U) where
-      # L is the strictly lower triangular matrix,
-      # D is the diagonal,
-      # U is the strictly upper triangular matrix.
-      # Instead of actually splitting the matrix into L+D+U (i.e., 3 matrices),
-      # I'll just create a vector that holds the diagonal terms and use this
-      # form ...
-      #    x^(k+1) = D^-1 [ b - (Ax - Dx) ]
-      #
-      # This is easier to code since Ax can be done with 1 command and the
-      # inverse of a diagonal matrix is just 1/d_i,j ... so I can just divide
-      # of the diagonal element-wise.
-
-      x, converged, niters = jacobi_solver_csr( A_csr, b, maxiters=maxiters, tol=tolerance )
-
-      time_stop = time.time()
-      if converged is True:
-         print('Jacobi solver converged in %d iterations and took %8.4f (seconds)'%(niters,time_stop-time_start))
-         if write_solution:
-            write_tofile(x, 'jac.dat')
-      else:
-         print('Jacobi solver failed to converge in %d iterations and %8.4f (seconds)'%(niters,time_stop-time_start))
-
+# =============================================================================
+#    # Run the Jacobi Solver
+#    if True:
+# 
+#       print("Starting Jacobi solver:")
+# 
+#       time_start = time.time()
+# 
+#       # The Jacobi iteration is much simplier than CG. In matrix form,
+#       # it's ...
+#       #    x^(k+1) = D^-1 [ b - (L + U)x ]
+#       #
+#       # This comes from additively splitting A into (L + D + U) where
+#       # L is the strictly lower triangular matrix,
+#       # D is the diagonal,
+#       # U is the strictly upper triangular matrix.
+#       # Instead of actually splitting the matrix into L+D+U (i.e., 3 matrices),
+#       # I'll just create a vector that holds the diagonal terms and use this
+#       # form ...
+#       #    x^(k+1) = D^-1 [ b - (Ax - Dx) ]
+#       #
+#       # This is easier to code since Ax can be done with 1 command and the
+#       # inverse of a diagonal matrix is just 1/d_i,j ... so I can just divide
+#       # of the diagonal element-wise.
+# 
+#       x, converged, niters = jacobi_solver_csr( A_csr, b, maxiters=maxiters, tol=tolerance )
+# 
+#       time_stop = time.time()
+#       if converged is True:
+#          print('Jacobi solver converged in %d iterations and took %8.4f (seconds)'%(niters,time_stop-time_start))
+#          if write_solution:
+#             write_tofile(x, 'jac.dat')
+#       else:
+#          print('Jacobi solver failed to converge in %d iterations and %8.4f (seconds)'%(niters,time_stop-time_start))
+# 
+# =============================================================================
 if __name__ == "__main__":
    main()
