@@ -23,9 +23,10 @@ def loop_multiplication(a, b):
 def csr_Multiplication(a, b, I, V, P):
     rowCSR_Sum = 0
     resultCSR = []
+    
     for i in range(len(P)-1):
-        pointerList = list(range(P[i], P[i+1]))    
-        for j in pointerList:
+        #pointerList = list(range(P[i], P[i+1]))    
+        for j in range(P[i], P[i+1]):
             rowCSR_Sum += V[j]*b[I[j]]
         resultCSR.append(rowCSR_Sum)
         rowCSR_Sum = 0
