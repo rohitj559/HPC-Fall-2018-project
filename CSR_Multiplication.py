@@ -32,6 +32,22 @@ def csr_Multiplication(a, b, I, V, P):
         rowCSR_Sum = 0
     return resultCSR
 
+
+def SVMP(a, b):
+    rowCSR_Sum = 0
+    #print(a[1].getformat())
+    resultCSR = np.empty_like(np.zeros(a.indptr.shape[0] - 1), dtype = 'd')
+    print(str(len(a.indptr - 1)))
+    for i in range(len(a.indptr) - 1):
+        print("range of j; " + str(a.indptr[i]) + ", " + str(a.indptr[i + 1]))
+        for j in range(a.indptr[i], a.indptr[i + 1]):
+            rowCSR_Sum += a.data[j] * b[a.indices[j]]
+        resultCSR[i] = rowCSR_Sum
+        rowCSR_Sum = 0
+        
+    print("Reached return")
+    return resultCSR
+
 # =============================================================================
 # # Testing scenario 1: 
 # =============================================================================
@@ -48,9 +64,12 @@ loopProduct1 = loop_multiplication(input_1, input_2)
 
 csr_Product1 = csr_Multiplication(input_1, input_2, Index1, Value1, Pointer1)
 
+print(csr_Product1)
+
 # =============================================================================
 # # Testing Scenario 2:
 # =============================================================================
+"""
 input_3 = np.matrix('1 1 0 0 0 0 0 0 2; 1 1 1 1 1 1 0 0 2; 0 0 0 2 1 0 2 1 2')
 input_4 = np.matrix('1 1 1 1 1 1 1 1 2').T
 
@@ -63,7 +82,7 @@ pythonProduct2 = python_multiplication(input_3, input_4)
 loopProduct2 = loop_multiplication(input_3, input_4)
 
 csr_Product2 = csr_Multiplication(input_3, input_4, Index2, Value2, Pointer2)
-    
+"""    
 
  # =============================================================================
 # rowSum = 0
