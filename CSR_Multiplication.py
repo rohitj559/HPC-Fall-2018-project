@@ -22,13 +22,13 @@ def loop_multiplication(a, b):
         
 def csr_Multiplication(a, b, I, V, P):
     rowCSR_Sum = 0
-    resultCSR = []
+    resultCSR = np.empty_like(np.zeros((P.shape[0] - 1),dtype='d'))
     
     for i in range(len(P)-1):
         #pointerList = list(range(P[i], P[i+1]))    
         for j in range(P[i], P[i+1]):
             rowCSR_Sum += V[j]*b[I[j]]
-        resultCSR.append(rowCSR_Sum)
+        resultCSR[i] = rowCSR_Sum
         rowCSR_Sum = 0
     return resultCSR
 
@@ -38,9 +38,9 @@ def csr_Multiplication(a, b, I, V, P):
 input_1 = np.matrix('1 1 0 0 0 0 0 0 ; 1 1 1 1 1 1 0 0 ; 0 0 0 2 1 0 2 1')
 input_2 = np.matrix('1 1 1 1 1 1 1 1 ').T
 
-Index1 = [0,1,0,1,2,3,4,5,3,4,6,7]
-Value1 = [1,1,1,1,1,1,1,1,2,1,2,1]
-Pointer1 = [0,2,8,12]
+Index1 = np.array([0,1,0,1,2,3,4,5,3,4,6,7]) # [0,1,0,1,2,3,4,5,3,4,6,7]
+Value1 = np.array([1,1,1,1,1,1,1,1,2,1,2,1])
+Pointer1 = np.array([0,2,8,12])
 
 pythonProduct1 = python_multiplication(input_1, input_2)
 
