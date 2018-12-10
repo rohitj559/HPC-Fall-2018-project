@@ -110,33 +110,35 @@ def main():
    maxiters = 100
    tolerance = 1e-5
 
-   # Load CLI options
-   try:
-      opts, args = getopt.getopt(sys.argv[1:], "hN:m:wt:", ["help", "N=","maxiters=","write","tolerance"])
-   except getopt.GetoptError as err:
-      # print help information and exit:
-      print(err) # will print something like "option -a not recognized"
-      usage()
-      sys.exit(2)
-
-   for key, val in opts:
-      if key in ("-h", "--help"):
-         usage()
-         sys.exit()
-      elif key in ("-w", "--write"):
-         write_solution = True
-      elif key in ("-N", "--N"):
-         N = int(val)
-      elif key in ("-m", "--maxiters"):
-         maxiters = int(val)
-      elif key in ("-t", "--tolerance"):
-         tolerance = double(val)
-      else:
-         assert False, "Unhandled option: " + key
-
-   print("N         = " + str(N))
-   print("Max Iters = " + str( maxiters))
-   print("Tolerance = " + str(tolerance))
+# =============================================================================
+#    # Load CLI options
+#    try:
+#       opts, args = getopt.getopt(sys.argv[1:], "hN:m:wt:", ["help", "N=","maxiters=","write","tolerance"])
+#    except getopt.GetoptError as err:
+#       # print help information and exit:
+#       print(err) # will print something like "option -a not recognized"
+#       usage()
+#       sys.exit(2)
+# 
+#    for key, val in opts:
+#       if key in ("-h", "--help"):
+#          usage()
+#          sys.exit()
+#       elif key in ("-w", "--write"):
+#          write_solution = True
+#       elif key in ("-N", "--N"):
+#          N = int(val)
+#       elif key in ("-m", "--maxiters"):
+#          maxiters = int(val)
+#       elif key in ("-t", "--tolerance"):
+#          tolerance = double(val)
+#       else:
+#          assert False, "Unhandled option: " + key
+# 
+#    print("N         = " + str(N))
+#    print("Max Iters = " + str( maxiters))
+#    print("Tolerance = " + str(tolerance))
+# =============================================================================
 
    # We're going to create a 2d laplacian on a mesh
    # and construct a sparse matrix in COO Format. This
@@ -228,6 +230,10 @@ def main():
 
    # Finally, convert the COO to a CSR matrix (which is faster).
    A_csr = csr_matrix(A_coo)
+   
+   V = A_csr.data
+   I = A_csr.indices 
+   P = A_csr.indptr 
 
    if nrows < 100:
       print(A_csr)
@@ -248,26 +254,44 @@ def main():
 
    # Run the CG solver.
 
-   ###################################################################################################
-   def ConjGrad(a, b, x):
+   def csr_Multiplication(a, x, V, I, P):
+    rowCSR_Sum = 0
+    resultCSR = np.empty_like(np.zeros((P.shape[0] - 1),dtype='d'))
+    
+    for i in range(len(P)-1):
+        #pointerList = list(range(P[i], P[i+1]))    
+        for j in range(P[i], P[i+1]):
+            rowCSR_Sum += V[j]*x[I[j]]
+        resultCSR[i] = rowCSR_Sum
+        rowCSR_Sum = 0
+    return resultCSR
+   
+   def ConjGrad(a, b, x, V, I, P):
        #b = (b[np.newaxis]).T;
        #x = (x[np.newaxis]).T;
        
-       r = (b - np.dot(np.array(a), x));
+       #r = (b - np.dot(np.array(a), x));
+       #r = b - a.dot(x)
+       r = b - csr_Multiplication(a, x, V, I, P)
+
        p = r;
-       rsold = np.dot(r.T, r);
-    
+       rsold = r.T.dot(r);
+       counter = 0
        for i in range(b.shape[0]):
-           a_p = np.dot(a, p);
-           alpha = rsold / np.dot(p.T, a_p);
+           counter += 1;
+           #a_p = np.dot(a, p);
+           a_p = csr_Multiplication(a, p, V, I, P)
+
+           alpha = rsold / p.T.dot(a_p);
            x = x + (alpha * p);
            r = r - (alpha * a_p);
-           rsnew = np.dot(r.T, r);
+           rsnew = r.T.dot(r);
+           print(counter, np.sqrt(rsnew))
            if (np.sqrt(rsnew) < (10 ** -5)):
                break;
            p = r + ((rsnew / rsold) * p);
-           rsold = rsnew;        
-       return p
+           rsold = rsnew;
+       return x, counter;
 
 # =============================================================================
 #     a = np.array([[3, 2, -1], [2, -1, 1], [-1, 1, -1]]) # 3X3 symmetric matrix
@@ -277,40 +301,56 @@ def main():
    nrows = b.shape[0]
    # Create the solution vector and initialize the zero.
    x = np.zeros(nrows,dtype='d') 
+   #x = csr_matrix(x).T
+   #b = csr_matrix(b).T
    #x = csr_matrix(x); 
-   x = x[np.newaxis].T
+   #x = x[np.newaxis].T
    #b = csr_matrix(b);
-   b = b[np.newaxis].T
-   A_array = A_csr.toarray()
-   val = ConjGrad(A_array, b, x);
+   #b = b[np.newaxis].T
+   # A_array = A_csr#.toarray()
+   val = ConjGrad(A_csr, b, x, V, I , P);
    print(val)
-   l = []
 
+   if True:
+
+      # The built-in CG solver allows a user-defined 'callback' function that's
+      # called each iteration so the user can inspect how the solution is
+      # progressing. I'll just compute and print the 2-norm of the residual every
+      # 10th step. iteration_count, b, and A_csr are known externally.
+      def cg_callback(xk):
+         global iteration_count
+         iteration_count += 1
+         if iteration_count % 10 == 0:
+            print("iter: %d %e"%(iteration_count, np.linalg.norm(b - A_csr * xk)))
+
+      print("Starting CG solver:")
+
+      time_start = time.time()
+      x, info = linalg.cg( A_csr, b, tol=tolerance, maxiter=500, callback=cg_callback )
+
+      time_stop = time.time()
+      if info == 0:
+         print("CG solver converged in %d iterations and took %8.4f (seconds)"%(iteration_count, time_stop-time_start))
+         if write_solution:
+            write_tofile(x, 'cg.dat')
+      else:
+         print('CG solver failed to converge. Error flag= ' + str(info))
+         
+        
+# CSR multiplication exercise:
+         
 # =============================================================================
-#    if True:
+# a = np.matrix('1 1 0 0 0 0 0 0; 1 1 1 1 1 1 0 0; 0 0 0 2 1 0 2 1')
+# b = np.matrix('1 1 1 1 1 1 1 1').T
 # 
-#       # The built-in CG solver allows a user-defined 'callback' function that's
-#       # called each iteration so the user can inspect how the solution is
-#       # progressing. I'll just compute and print the 2-norm of the residual every
-#       # 10th step. iteration_count, b, and A_csr are known externally.
-#       def cg_callback(xk):
-#          global iteration_count
-#          iteration_count += 1
-#          if iteration_count % 10 == 0:
-#             print("iter: %d %e"%(iteration_count, np.linalg.norm(b - A_csr * xk)))
+# ab = a*b
 # 
-#       print("Starting CG solver:")
-# 
-#       time_start = time.time()
-#       x, info = linalg.cg( A_csr, b, tol=tolerance, maxiter=500, callback=cg_callback )
-# 
-#       time_stop = time.time()
-#       if info == 0:
-#          print("CG solver converged in %d iterations and took %8.4f (seconds)"%(iteration_count, time_stop-time_start))
-#          if write_solution:
-#             write_tofile(x, 'cg.dat')
-#       else:
-#          print('CG solver failed to converge. Error flag= ' + str(info))
+# rowSum = 0
+# result = []
+# for i in range(a.shape[0]):
+#     for j in range(b.shape[0]):
+#         rowSum += a[i, j]*b[j]
+#         result.append(rowSum)
 # =============================================================================
 
 # =============================================================================
