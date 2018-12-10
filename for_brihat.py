@@ -11,7 +11,7 @@ import time
 from scipy.sparse import coo_matrix, isspmatrix_coo
 from scipy.sparse import csr_matrix, isspmatrix_csr
 from scipy.sparse import linalg
-
+from CSR_Multiplication import SVMP
 def usage():
    print("Usage for {}", sys.argv[0])
    print("  --help|-h     : write this help")
@@ -105,7 +105,7 @@ def jacobi_solver_csr( A, b, maxiters = 500, tol = 1e-5 ):
 
 def main():
 
-   N = 20
+   N = 100
    write_solution = False
    maxiters = 100
    tolerance = 1e-5
@@ -266,13 +266,13 @@ def main():
         rowCSR_Sum = 0
     return resultCSR
    
-   def ConjGrad(a, b, x, V, I, P):
+   def ConjGrad(a, b, x):
        #b = (b[np.newaxis]).T;
        #x = (x[np.newaxis]).T;
        
        #r = (b - np.dot(np.array(a), x));
        #r = b - a.dot(x)
-       r = b - csr_Multiplication(a, x, V, I, P)
+       r = b - SVMP(a, x)
 
        p = r;
        rsold = r.T.dot(r);
@@ -280,14 +280,15 @@ def main():
        for i in range(b.shape[0]):
            counter += 1;
            #a_p = np.dot(a, p);
-           a_p = csr_Multiplication(a, p, V, I, P)
+           a_p = SVMP(a, p)
 
            alpha = rsold / p.T.dot(a_p);
            x = x + (alpha * p);
            r = r - (alpha * a_p);
            rsnew = r.T.dot(r);
-           print(counter, np.sqrt(rsnew))
+           #print(counter, np.sqrt(rsnew))
            if (np.sqrt(rsnew) < (10 ** -5)):
+               print("It converged!!!")
                break;
            p = r + ((rsnew / rsold) * p);
            rsold = rsnew;
@@ -308,9 +309,16 @@ def main():
    #b = csr_matrix(b);
    #b = b[np.newaxis].T
    # A_array = A_csr#.toarray()
-   val = ConjGrad(A_csr, b, x, V, I , P);
-   print(val)
+   time_start = time.time()
+   val, counter = ConjGrad(A_csr, b, x);
+   print(counter)
+   time_stop = time.time()
+   
+   #print(val)
+   print("TimeTaken in second: " + str(time_stop - time_start))
 
+
+"""
    if True:
 
       # The built-in CG solver allows a user-defined 'callback' function that's
@@ -336,7 +344,7 @@ def main():
       else:
          print('CG solver failed to converge. Error flag= ' + str(info))
          
-        
+"""        
 # CSR multiplication exercise:
          
 # =============================================================================

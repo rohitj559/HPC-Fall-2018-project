@@ -37,15 +37,13 @@ def SVMP(a, b):
     rowCSR_Sum = 0
     #print(a[1].getformat())
     resultCSR = np.empty_like(np.zeros(a.indptr.shape[0] - 1), dtype = 'd')
-    print(str(len(a.indptr - 1)))
+    #print(str(len(a.indptr - 1)))
     for i in range(len(a.indptr) - 1):
-        print("range of j; " + str(a.indptr[i]) + ", " + str(a.indptr[i + 1]))
+        #print("range of j; " + str(a.indptr[i]) + ", " + str(a.indptr[i + 1]))
         for j in range(a.indptr[i], a.indptr[i + 1]):
             rowCSR_Sum += a.data[j] * b[a.indices[j]]
         resultCSR[i] = rowCSR_Sum
         rowCSR_Sum = 0
-        
-    print("Reached return")
     return resultCSR
 
 # =============================================================================
