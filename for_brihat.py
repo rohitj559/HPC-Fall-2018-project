@@ -275,7 +275,7 @@ def main():
 #     return resultCSR
 # =============================================================================
    
-   def ConjGrad(a, b, x):
+   def ConjGrad(a, b, x, nb):
        #b = (b[np.newaxis]).T;
        #x = (x[np.newaxis]).T;
        
@@ -295,8 +295,10 @@ def main():
            x = x + (alpha * p);
            r = r - (alpha * a_p);
            rsnew = r.T.dot(r);
+           if counter % 10 == 0:
+               print("iter: %d %e %e"%(counter,rsnew, np.linalg.norm(b - a*x)))
            #print(counter, np.sqrt(rsnew))
-           if (np.sqrt(rsnew) < (10 ** -5)):
+           if (np.sqrt(rsnew) < ((10 ** -5)*nb)):
                print("It converged!!!")
                break;
            p = r + ((rsnew / rsold) * p);
@@ -323,7 +325,7 @@ def main():
 #  Benchmark for python implementation of Cojugate Gradient Algorithm
 # =============================================================================
    time_start = time.time()
-   val, counter = ConjGrad(A_csr, b, x);
+   val, counter = ConjGrad(A_csr, b, x, normb);
    print(counter)
    time_stop = time.time()
    
