@@ -12,6 +12,7 @@ from scipy.sparse import coo_matrix, isspmatrix_coo
 from scipy.sparse import csr_matrix, isspmatrix_csr
 from scipy.sparse import linalg
 from CSR_Multiplication import SVMP
+
 def usage():
    print("Usage for {}", sys.argv[0])
    print("  --help|-h     : write this help")
@@ -231,9 +232,11 @@ def main():
    # Finally, convert the COO to a CSR matrix (which is faster).
    A_csr = csr_matrix(A_coo)
    
-   V = A_csr.data
-   I = A_csr.indices 
-   P = A_csr.indptr 
+# =============================================================================
+#    V = A_csr.data
+#    I = A_csr.indices 
+#    P = A_csr.indptr 
+# =============================================================================
 
    if nrows < 100:
       print(A_csr)
@@ -246,7 +249,6 @@ def main():
             ij = get_index(i,j)
             fp.write( str(i*h) + " " + str(j*h) + " " + str(x[ij]) + "\n" )
       fp.close()
-
       return
 
    normb = np.linalg.norm(b)
@@ -254,17 +256,19 @@ def main():
 
    # Run the CG solver.
 
-   def csr_Multiplication(a, x, V, I, P):
-    rowCSR_Sum = 0
-    resultCSR = np.empty_like(np.zeros((P.shape[0] - 1),dtype='d'))
-    
-    for i in range(len(P)-1):
-        #pointerList = list(range(P[i], P[i+1]))    
-        for j in range(P[i], P[i+1]):
-            rowCSR_Sum += V[j]*x[I[j]]
-        resultCSR[i] = rowCSR_Sum
-        rowCSR_Sum = 0
-    return resultCSR
+# =============================================================================
+#    def csr_Multiplication(a, x, V, I, P):
+#     rowCSR_Sum = 0
+#     resultCSR = np.empty_like(np.zeros((P.shape[0] - 1),dtype='d'))
+#     
+#     for i in range(len(P)-1):
+#         #pointerList = list(range(P[i], P[i+1]))    
+#         for j in range(P[i], P[i+1]):
+#             rowCSR_Sum += V[j]*x[I[j]]
+#         resultCSR[i] = rowCSR_Sum
+#         rowCSR_Sum = 0
+#     return resultCSR
+# =============================================================================
    
    def ConjGrad(a, b, x):
        #b = (b[np.newaxis]).T;
@@ -309,16 +313,22 @@ def main():
    #b = csr_matrix(b);
    #b = b[np.newaxis].T
    # A_array = A_csr#.toarray()
+   
+# =============================================================================
+#  Benchmark for python implementation of Cojugate Gradient Algorithm
+# =============================================================================
    time_start = time.time()
    val, counter = ConjGrad(A_csr, b, x);
    print(counter)
    time_stop = time.time()
    
    #print(val)
-   print("TimeTaken in second: " + str(time_stop - time_start))
-
-
-"""
+   #print("TimeTaken(in seconds) by Python CG: " + str(time_stop - time_start))
+   print("Python self implemented CG solver converged in %d iterations and took %8.4f (seconds)"%(counter, time_stop-time_start))
+   
+# =============================================================================
+#  Benchmark for Numpy built in function of CG algorithm
+# =============================================================================
    if True:
 
       # The built-in CG solver allows a user-defined 'callback' function that's
@@ -339,12 +349,14 @@ def main():
       time_stop = time.time()
       if info == 0:
          print("CG solver converged in %d iterations and took %8.4f (seconds)"%(iteration_count, time_stop-time_start))
-         if write_solution:
-            write_tofile(x, 'cg.dat')
-      else:
-         print('CG solver failed to converge. Error flag= ' + str(info))
+# =============================================================================
+#          if write_solution:
+#             write_tofile(x, 'cg.dat')
+#       else:
+#          print('CG solver failed to converge. Error flag= ' + str(info))
+# =============================================================================
          
-"""        
+        
 # CSR multiplication exercise:
          
 # =============================================================================
@@ -362,40 +374,42 @@ def main():
 # =============================================================================
 
 # =============================================================================
-#    # Run the Jacobi Solver
-#    if True:
-# 
-#       print("Starting Jacobi solver:")
-# 
-#       time_start = time.time()
-# 
-#       # The Jacobi iteration is much simplier than CG. In matrix form,
-#       # it's ...
-#       #    x^(k+1) = D^-1 [ b - (L + U)x ]
-#       #
-#       # This comes from additively splitting A into (L + D + U) where
-#       # L is the strictly lower triangular matrix,
-#       # D is the diagonal,
-#       # U is the strictly upper triangular matrix.
-#       # Instead of actually splitting the matrix into L+D+U (i.e., 3 matrices),
-#       # I'll just create a vector that holds the diagonal terms and use this
-#       # form ...
-#       #    x^(k+1) = D^-1 [ b - (Ax - Dx) ]
-#       #
-#       # This is easier to code since Ax can be done with 1 command and the
-#       # inverse of a diagonal matrix is just 1/d_i,j ... so I can just divide
-#       # of the diagonal element-wise.
-# 
-#       x, converged, niters = jacobi_solver_csr( A_csr, b, maxiters=maxiters, tol=tolerance )
-# 
-#       time_stop = time.time()
-#       if converged is True:
-#          print('Jacobi solver converged in %d iterations and took %8.4f (seconds)'%(niters,time_stop-time_start))
+# Benchmark for Jacobi Solver
+# =============================================================================
+   if True:
+
+      print("Starting Jacobi solver:")
+
+      time_start = time.time()
+
+      # The Jacobi iteration is much simplier than CG. In matrix form,
+      # it's ...
+      #    x^(k+1) = D^-1 [ b - (L + U)x ]
+      #
+      # This comes from additively splitting A into (L + D + U) where
+      # L is the strictly lower triangular matrix,
+      # D is the diagonal,
+      # U is the strictly upper triangular matrix.
+      # Instead of actually splitting the matrix into L+D+U (i.e., 3 matrices),
+      # I'll just create a vector that holds the diagonal terms and use this
+      # form ...
+      #    x^(k+1) = D^-1 [ b - (Ax - Dx) ]
+      #
+      # This is easier to code since Ax can be done with 1 command and the
+      # inverse of a diagonal matrix is just 1/d_i,j ... so I can just divide
+      # of the diagonal element-wise.
+
+      x, converged, niters = jacobi_solver_csr( A_csr, b, maxiters=maxiters, tol=tolerance )
+
+      time_stop = time.time()
+      if converged is True:
+         print('Jacobi solver converged in %d iterations and took %8.4f (seconds)'%(niters,time_stop-time_start))
+# =============================================================================
 #          if write_solution:
 #             write_tofile(x, 'jac.dat')
 #       else:
 #          print('Jacobi solver failed to converge in %d iterations and %8.4f (seconds)'%(niters,time_stop-time_start))
-# 
 # =============================================================================
+
 if __name__ == "__main__":
    main()
