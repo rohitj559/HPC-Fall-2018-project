@@ -12,6 +12,9 @@ from scipy.sparse import coo_matrix, isspmatrix_coo
 from scipy.sparse import csr_matrix, isspmatrix_csr
 from scipy.sparse import linalg
 from CSR_Multiplication import SVMP
+# =============================================================================
+# from cSPMV import SVMP
+# =============================================================================
 
 def usage():
    print("Usage for {}", sys.argv[0])
@@ -22,7 +25,7 @@ def usage():
 
 iteration_count = 0
 
-def jacobi_solver_csr( A, b, maxiters = 500, tol = 1e-5 ):
+def jacobi_solver_csr( A, b, maxiters, tol = 1e-5 ):
    """
    Python implementation of sparse matrix iterative solver
    using Jacobi's method.
@@ -106,9 +109,9 @@ def jacobi_solver_csr( A, b, maxiters = 500, tol = 1e-5 ):
 
 def main():
 
-   N = 100
+   N = 1600
    write_solution = False
-   maxiters = 100
+   maxiters = 3000
    tolerance = 1e-5
 
 # =============================================================================
@@ -324,7 +327,7 @@ def main():
    
    #print(val)
    #print("TimeTaken(in seconds) by Python CG: " + str(time_stop - time_start))
-   print("Python self implemented CG solver converged in %d iterations and took %8.4f (seconds)"%(counter, time_stop-time_start))
+   print("Self implemented python CG solver converged in %d iterations and took %8.4f (seconds)"%(counter, time_stop-time_start))
    
 # =============================================================================
 #  Benchmark for Numpy built in function of CG algorithm
@@ -341,14 +344,14 @@ def main():
          if iteration_count % 10 == 0:
             print("iter: %d %e"%(iteration_count, np.linalg.norm(b - A_csr * xk)))
 
-      print("Starting CG solver:")
+      print("Starting Numpy's CG solver:")
 
       time_start = time.time()
-      x, info = linalg.cg( A_csr, b, tol=tolerance, maxiter=500, callback=cg_callback )
+      x, info = linalg.cg( A_csr, b, tol=tolerance, maxiter=maxiters, callback=cg_callback )
 
       time_stop = time.time()
       if info == 0:
-         print("CG solver converged in %d iterations and took %8.4f (seconds)"%(iteration_count, time_stop-time_start))
+         print("Numpy's CG solver converged in %d iterations and took %8.4f (seconds)"%(iteration_count, time_stop-time_start))
 # =============================================================================
 #          if write_solution:
 #             write_tofile(x, 'cg.dat')
@@ -376,34 +379,36 @@ def main():
 # =============================================================================
 # Benchmark for Jacobi Solver
 # =============================================================================
-   if True:
-
-      print("Starting Jacobi solver:")
-
-      time_start = time.time()
-
-      # The Jacobi iteration is much simplier than CG. In matrix form,
-      # it's ...
-      #    x^(k+1) = D^-1 [ b - (L + U)x ]
-      #
-      # This comes from additively splitting A into (L + D + U) where
-      # L is the strictly lower triangular matrix,
-      # D is the diagonal,
-      # U is the strictly upper triangular matrix.
-      # Instead of actually splitting the matrix into L+D+U (i.e., 3 matrices),
-      # I'll just create a vector that holds the diagonal terms and use this
-      # form ...
-      #    x^(k+1) = D^-1 [ b - (Ax - Dx) ]
-      #
-      # This is easier to code since Ax can be done with 1 command and the
-      # inverse of a diagonal matrix is just 1/d_i,j ... so I can just divide
-      # of the diagonal element-wise.
-
-      x, converged, niters = jacobi_solver_csr( A_csr, b, maxiters=maxiters, tol=tolerance )
-
-      time_stop = time.time()
-      if converged is True:
-         print('Jacobi solver converged in %d iterations and took %8.4f (seconds)'%(niters,time_stop-time_start))
+# =============================================================================
+#    if True:
+# 
+#       print("Starting Jacobi solver:")
+# 
+#       time_start = time.time()
+# 
+#       # The Jacobi iteration is much simplier than CG. In matrix form,
+#       # it's ...
+#       #    x^(k+1) = D^-1 [ b - (L + U)x ]
+#       #
+#       # This comes from additively splitting A into (L + D + U) where
+#       # L is the strictly lower triangular matrix,
+#       # D is the diagonal,
+#       # U is the strictly upper triangular matrix.
+#       # Instead of actually splitting the matrix into L+D+U (i.e., 3 matrices),
+#       # I'll just create a vector that holds the diagonal terms and use this
+#       # form ...
+#       #    x^(k+1) = D^-1 [ b - (Ax - Dx) ]
+#       #
+#       # This is easier to code since Ax can be done with 1 command and the
+#       # inverse of a diagonal matrix is just 1/d_i,j ... so I can just divide
+#       # of the diagonal element-wise.
+# 
+#       x, converged, niters = jacobi_solver_csr( A_csr, b, maxiters=maxiters, tol=tolerance )
+# 
+#       time_stop = time.time()
+#       if converged is True:
+#          print('Jacobi solver converged in %d iterations and took %8.4f (seconds)'%(niters,time_stop-time_start))
+# =============================================================================
 # =============================================================================
 #          if write_solution:
 #             write_tofile(x, 'jac.dat')
