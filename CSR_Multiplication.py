@@ -49,20 +49,22 @@ def SVMP(a, b):
 # =============================================================================
 # # Testing scenario 1: 
 # =============================================================================
-input_1 = np.matrix('1 1 0 0 0 0 0 0 ; 1 1 1 1 1 1 0 0 ; 0 0 0 2 1 0 2 1')
-input_2 = np.matrix('1 1 1 1 1 1 1 1 ').T
-
-Index1 = np.array([0,1,0,1,2,3,4,5,3,4,6,7]) # [0,1,0,1,2,3,4,5,3,4,6,7]
-Value1 = np.array([1,1,1,1,1,1,1,1,2,1,2,1])
-Pointer1 = np.array([0,2,8,12])
-
-pythonProduct1 = python_multiplication(input_1, input_2)
-
-loopProduct1 = loop_multiplication(input_1, input_2)
-
-csr_Product1 = csr_Multiplication(input_1, input_2, Index1, Value1, Pointer1)
-
-print(csr_Product1)
+# =============================================================================
+# input_1 = np.matrix('1 1 0 0 0 0 0 0 ; 1 1 1 1 1 1 0 0 ; 0 0 0 2 1 0 2 1')
+# input_2 = np.matrix('1 1 1 1 1 1 1 1 ').T
+# 
+# Index1 = np.array([0,1,0,1,2,3,4,5,3,4,6,7]) # [0,1,0,1,2,3,4,5,3,4,6,7]
+# Value1 = np.array([1,1,1,1,1,1,1,1,2,1,2,1])
+# Pointer1 = np.array([0,2,8,12])
+# 
+# pythonProduct1 = python_multiplication(input_1, input_2)
+# 
+# loopProduct1 = loop_multiplication(input_1, input_2)
+# 
+# csr_Product1 = csr_Multiplication(input_1, input_2, Index1, Value1, Pointer1)
+# 
+# print(csr_Product1)
+# =============================================================================
 
 # =============================================================================
 # # Testing Scenario 2:
