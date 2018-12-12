@@ -109,40 +109,42 @@ def jacobi_solver_csr( A, b, maxiters, tol = 1e-5 ):
 
 def main():
 
-   N = 1600
+   #N = 1600
    write_solution = False
-   maxiters = 3000
+   #maxiters = 3000
    tolerance = 1e-5
 
+   # Load CLI options
+   try:
+      opts, args = getopt.getopt(sys.argv[1:], "hN:m:wt:", ["help", "N=","maxiters=","write","tolerance"])
+   except getopt.GetoptError as err:
+      # print help information and exit:
+      print(err) # will print something like "option -a not recognized"
+      usage()
+      sys.exit(2)
+
+   for key, val in opts:
+      if key in ("-h", "--help"):
+         usage()
+         sys.exit()
 # =============================================================================
-#    # Load CLI options
-#    try:
-#       opts, args = getopt.getopt(sys.argv[1:], "hN:m:wt:", ["help", "N=","maxiters=","write","tolerance"])
-#    except getopt.GetoptError as err:
-#       # print help information and exit:
-#       print(err) # will print something like "option -a not recognized"
-#       usage()
-#       sys.exit(2)
-# 
-#    for key, val in opts:
-#       if key in ("-h", "--help"):
-#          usage()
-#          sys.exit()
 #       elif key in ("-w", "--write"):
 #          write_solution = True
-#       elif key in ("-N", "--N"):
-#          N = int(val)
-#       elif key in ("-m", "--maxiters"):
-#          maxiters = int(val)
+# =============================================================================
+      elif key in ("-N", "--N"):
+         N = int(val)
+      elif key in ("-m", "--maxiters"):
+         maxiters = int(val)
+# =============================================================================
 #       elif key in ("-t", "--tolerance"):
 #          tolerance = double(val)
-#       else:
-#          assert False, "Unhandled option: " + key
-# 
-#    print("N         = " + str(N))
-#    print("Max Iters = " + str( maxiters))
-#    print("Tolerance = " + str(tolerance))
 # =============================================================================
+      else:
+         assert False, "Unhandled option: " + key
+
+   print("N         = " + str(N))
+   print("Max Iters = " + str( maxiters))
+   print("Tolerance = " + str(tolerance))
 
    # We're going to create a 2d laplacian on a mesh
    # and construct a sparse matrix in COO Format. This
