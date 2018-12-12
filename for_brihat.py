@@ -236,6 +236,7 @@ def main():
 
    # Finally, convert the COO to a CSR matrix (which is faster).
    A_csr = csr_matrix(A_coo)
+   A_dense = A_csr.toarray()
    
 # =============================================================================
 #    V = A_csr.data
@@ -304,6 +305,33 @@ def main():
            p = r + ((rsnew / rsold) * p);
            rsold = rsnew;
        return x, counter;
+   
+   def ConjGrad_Dense(a, b, x, nb):
+        r = b - a.dot(x)
+    
+        p = r;
+        rsold = r.T.dot(r);
+        counter = 0
+        for i in range(b.shape[0]):
+            counter += 1;
+           #a_p = np.dot(a, p);
+            a_p = a.dot(p)
+    
+            alpha = rsold / p.T.dot(a_p);
+            x = x + (alpha * p);
+            r = r - (alpha * a_p);
+            rsnew = r.T.dot(r);
+            if counter % 10 == 0:
+                print("iter: %d %e %e"%(counter,rsnew, np.linalg.norm(b - a*x)))
+            #print(counter, np.sqrt(rsnew))
+            if (np.sqrt(rsnew) < ((10 ** -5)*nb)):
+                print("It converged!!!")
+                break;
+            p = r + ((rsnew / rsold) * p);
+            rsold = rsnew;
+        return x, counter;
+   
+    
 
 # =============================================================================
 #     a = np.array([[3, 2, -1], [2, -1, 1], [-1, 1, -1]]) # 3X3 symmetric matrix
@@ -322,10 +350,22 @@ def main():
    # A_array = A_csr#.toarray()
    
 # =============================================================================
-#  Benchmark for python implementation of Cojugate Gradient Algorithm
+#  Benchmark for python implementation of Cojugate Gradient Algorithm for csr matrix
 # =============================================================================
    time_start = time.time()
    val, counter = ConjGrad(A_csr, b, x, normb);
+   print(counter)
+   time_stop = time.time()
+   
+   #print(val)
+   #print("TimeTaken(in seconds) by Python CG: " + str(time_stop - time_start))
+   print("Self implemented python CG solver converged in %d iterations and took %8.4f (seconds)"%(counter, time_stop-time_start))
+   
+# =============================================================================
+#  Benchmark for python implementation of Cojugate Gradient Algorithm for dense matrix
+# =============================================================================
+   time_start = time.time()
+   val, counter = ConjGrad_Dense(A_dense, b, x, normb);
    print(counter)
    time_stop = time.time()
    
